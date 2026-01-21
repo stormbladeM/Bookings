@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export default function useModal(handler) {
+export default function useModal(handler, listenCapturing = true) {
   const ref = useRef();
   useEffect(
     function () {
@@ -9,10 +9,11 @@ export default function useModal(handler) {
           handler();
         }
       }
-      document.addEventListener("click", handleClick, true);
-      return () => document.removeEventListener("click", handleClick, true);
+      document.addEventListener("click", handleClick, listenCapturing);
+      return () =>
+        document.removeEventListener("click", handleClick, listenCapturing);
     },
-    [handler]
+    [handler, listenCapturing],
   );
   return { ref };
 }
