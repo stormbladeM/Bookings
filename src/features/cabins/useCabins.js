@@ -12,11 +12,3 @@ export function useCabins() {
   });
   return { isLoading, cabins, error };
 }
-
-
-
-interface Userdata{
-  name:String;
-  age:Number
-}
-interface us7
