@@ -8,7 +8,7 @@ export async function getBookings({ filter, sortBy, page }) {
     .from("bookings")
     .select(
       "id,created_at,endDate,startDate,numNights,numGuests,status,totalPrice,cabins(name),guests(fullName,email)",
-      { count: "exact" }
+      { count: "exact" },
     );
 
   if (filter) query = query.eq(filter.field, filter.value);
@@ -70,7 +70,7 @@ export async function getStaysTodayActivity() {
     .from("bookings")
     .select("*, guests(fullName, nationality, countryFlag)")
     .or(
-      `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`
+      `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`,
     )
     .order("created_at");
 
@@ -122,4 +122,65 @@ export async function getBooking(id) {
     throw new Error("Booking not found");
   }
   return data;
+}
+
+export async function createBooking(newBooking) {
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert([newBooking])
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Booking could not be created");
+  }
+  return data;
+}
+
+export async function getAvailableCabins(startDate, endDate) {
+  // 1. Get all bookings in the date range
+  const { data: bookings, error } = await supabase
+    .from("bookings")
+    .select("cabinId")
+    .or(`and(startDate.lte.${endDate},endDate.gte.${startDate})`);
+
+  if (error) {
+    console.error(error);
+    throw new Error("Could not check availability");
+  }
+
+  // 2. Get all cabins
+  const { data: cabins, error: cabinsError } = await supabase
+    .from("cabins")
+    .select("*");
+
+  if (cabinsError) {
+    console.error(cabinsError);
+    throw new Error("Could not load cabins");
+  }
+
+  // 3. Filter out unavailable cabins
+  const unavailableCabinIds = bookings.map((booking) => booking.cabinId);
+  const availableCabins = cabins.filter(
+    (cabin) => !unavailableCabinIds.includes(cabin.id),
+  );
+
+  return availableCabins;
+}
+
+export async function checkCabinAvailability(cabinId, startDate, endDate) {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("cabinId", cabinId)
+    .or(`and(startDate.lte.${endDate},endDate.gte.${startDate})`)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Could not check cabin availability");
+  }
+
+  return !data; // Returns true if available (no booking found), false otherwise
 }
