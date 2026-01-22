@@ -7,9 +7,9 @@ export function useAvailableCabins(startDate, endDate) {
     data: availableCabins,
     error,
   } = useQuery({
-    queryKey: ["availableCabins", startDate, endDate],
+    queryKey: ["available-cabins", startDate, endDate],
     queryFn: () => getAvailableCabins(startDate, endDate),
-    enabled: !!startDate && !!endDate, // Only run if dates are selected
+    enabled: !!startDate && !!endDate,
   });
 
   return { isLoading, error, availableCabins };

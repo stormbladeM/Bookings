@@ -1,48 +1,125 @@
-import { differenceInDays, isBefore, isPast, startOfToday } from "date-fns";
+import { differenceInDays, isAfter, isBefore, parseISO } from "date-fns";
 
+// Validate date range
+export function validateDateRange(startDate, endDate) {
+  if (!startDate || !endDate) {
+    return { isValid: false, error: "Both start and end dates are required" };
+  }
+
+  const start = typeof startDate === "string" ? parseISO(startDate) : startDate;
+  const end = typeof endDate === "string" ? parseISO(endDate) : endDate;
+
+  if (isAfter(start, end)) {
+    return { isValid: false, error: "Start date must be before end date" };
+  }
+
+  if (isBefore(start, new Date())) {
+    return { isValid: false, error: "Start date cannot be in the past" };
+  }
+
+  return { isValid: true, error: null };
+}
+
+// Validate guest count
+export function validateGuestCount(numGuests, maxCapacity) {
+  if (!numGuests || numGuests < 1) {
+    return { isValid: false, error: "At least 1 guest is required" };
+  }
+
+  if (numGuests > maxCapacity) {
+    return {
+      isValid: false,
+      error: `Number of guests cannot exceed cabin capacity of ${maxCapacity}`,
+    };
+  }
+
+  return { isValid: true, error: null };
+}
+
+// Calculate number of nights
 export function calculateNumNights(startDate, endDate) {
   if (!startDate || !endDate) return 0;
-  return differenceInDays(new Date(endDate), new Date(startDate));
+
+  const start = typeof startDate === "string" ? parseISO(startDate) : startDate;
+  const end = typeof endDate === "string" ? parseISO(endDate) : endDate;
+
+  return differenceInDays(end, start);
 }
 
-export function validateBookingDates(startDate, endDate) {
+// Check if there's a date conflict with existing bookings
+export function checkDateConflict(cabinId, startDate, endDate, existingBookings) {
+  if (!cabinId || !startDate || !endDate || !existingBookings) {
+    return { hasConflict: false, conflictingBooking: null };
+  }
+
+  const start = typeof startDate === "string" ? parseISO(startDate) : startDate;
+  const end = typeof endDate === "string" ? parseISO(endDate) : endDate;
+
+  const conflict = existingBookings.find((booking) => {
+    if (booking.cabinId !== cabinId) return false;
+    if (booking.status === "checked-out" || booking.status === "cancelled") return false;
+
+    const bookingStart = parseISO(booking.startDate);
+    const bookingEnd = parseISO(booking.endDate);
+
+    // Check if dates overlap
+    return (
+      (isAfter(start, bookingStart) && isBefore(start, bookingEnd)) ||
+      (isAfter(end, bookingStart) && isBefore(end, bookingEnd)) ||
+      (isBefore(start, bookingStart) && isAfter(end, bookingEnd)) ||
+      start.getTime() === bookingStart.getTime() ||
+      end.getTime() === bookingEnd.getTime()
+    );
+  });
+
+  return {
+    hasConflict: !!conflict,
+    conflictingBooking: conflict || null,
+  };
+}
+
+// Validate entire booking object
+export function validateBooking(bookingData, cabin, existingBookings = []) {
   const errors = {};
 
-  if (!startDate) {
-    errors.startDate = "Start date is required";
+  // Validate guest
+  if (!bookingData.guestId) {
+    errors.guestId = "Guest is required";
   }
 
-  if (!endDate) {
-    errors.endDate = "End date is required";
+  // Validate cabin
+  if (!bookingData.cabinId) {
+    errors.cabinId = "Cabin is required";
   }
 
-  if (startDate && endDate) {
-    if (isBefore(new Date(endDate), new Date(startDate))) {
-      errors.endDate = "End date must be after start date";
+  // Validate dates
+  const dateValidation = validateDateRange(bookingData.startDate, bookingData.endDate);
+  if (!dateValidation.isValid) {
+    errors.dates = dateValidation.error;
+  }
+
+  // Validate guest count
+  if (cabin) {
+    const guestValidation = validateGuestCount(bookingData.numGuests, cabin.maxCapacity);
+    if (!guestValidation.isValid) {
+      errors.numGuests = guestValidation.error;
     }
-
-    if (differenceInDays(new Date(endDate), new Date(startDate)) < 1) {
-      errors.endDate = "Booking must be at least 1 night";
-    }
   }
 
-  if (
-    startDate &&
-    isPast(new Date(startDate)) &&
-    !isSameDay(new Date(startDate), startOfToday())
-  ) {
-    // Allowing today is usually fine, but generally past dates shouldn't be allowed for new bookings
-    // Unless we are back-dating a booking manually. For now, let's warn or error.
-    // errors.startDate = "Start date cannot be in the past";
-  }
-
-  return errors;
-}
-
-function isSameDay(d1, d2) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
+  // Check for conflicts
+  const conflictCheck = checkDateConflict(
+    bookingData.cabinId,
+    bookingData.startDate,
+    bookingData.endDate,
+    existingBookings
   );
+
+  if (conflictCheck.hasConflict) {
+    errors.dates = "This cabin is already booked for the selected dates";
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
 }
