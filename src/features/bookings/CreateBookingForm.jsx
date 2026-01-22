@@ -14,14 +14,15 @@ import { useCreateBooking } from "./useCreateBooking";
 import { useSettings } from "../settings/useSettings";
 import { useCabins } from "../cabins/useCabins";
 import { useAllBookings } from "./useAllBookings";
-import GuestSelector from "../guests/GuestSelector";
+import GuestSearchAutocomplete from "../guests/GuestSearchAutocomplete";
 import BookingPriceCalculator from "./BookingPriceCalculator";
+import BookingTemplates from "./BookingTemplates";
+import CabinAvailabilityCalendar from "./CabinAvailabilityCalendar";
 import {
   calculateNumNights,
   validateBooking,
 } from "../../utils/bookingValidation";
 import { calculateBookingPrices } from "../../utils/priceCalculation";
-import CabinAvailabilityCalendar from "./CabinAvailabilityCalendar";
 
 function CreateBookingForm({ onCloseModal }) {
   const { register, handleSubmit, formState, setValue, watch, reset } =
@@ -34,6 +35,7 @@ function CreateBookingForm({ onCloseModal }) {
 
   const [selectedGuest, setSelectedGuest] = useState(null);
   const [selectedCabin, setSelectedCabin] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Watch form values for real-time updates
   const startDate = watch("startDate");
@@ -63,6 +65,25 @@ function CreateBookingForm({ onCloseModal }) {
         settings?.breakfastPrice,
       )
     : null;
+
+  // Handle template selection
+  const handleTemplateSelect = (template) => {
+    setValue("startDate", template.startDate);
+    setValue("endDate", template.endDate);
+    setValue("numGuests", template.numGuests);
+    setValue("hasBreakfast", template.hasBreakfast);
+    setValue("observations", template.observations);
+  };
+
+  // Handle calendar date selection
+  const handleCalendarDateSelect = (range) => {
+    if (range?.from) {
+      setValue("startDate", format(range.from, "yyyy-MM-dd"));
+    }
+    if (range?.to) {
+      setValue("endDate", format(range.to, "yyyy-MM-dd"));
+    }
+  };
 
   function onSubmit(data) {
     if (!selectedGuest) {
@@ -137,115 +158,144 @@ function CreateBookingForm({ onCloseModal }) {
   });
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit)} type="modal">
-      <FormRow label="Guest" error={!selectedGuest && "Guest is required"}>
-        <GuestSelector
-          selectedGuest={selectedGuest}
-          onSelectGuest={setSelectedGuest}
-        />
-      </FormRow>
+    <>
+      <BookingTemplates onSelectTemplate={handleTemplateSelect} />
 
-      <FormRow label="Start date" error={errors?.startDate?.message}>
-        <Input
-          type="date"
-          id="startDate"
-          min={format(new Date(), "yyyy-MM-dd")}
-          {...register("startDate", {
-            required: "Start date is required",
-          })}
-        />
-      </FormRow>
+      <Form onSubmit={handleSubmit(onSubmit)} type="modal">
+        <FormRow label="Guest" error={!selectedGuest && "Guest is required"}>
+          <GuestSearchAutocomplete
+            selectedGuest={selectedGuest}
+            onSelectGuest={setSelectedGuest}
+          />
+        </FormRow>
 
-      <FormRow label="End date" error={errors?.endDate?.message}>
-        <Input
-          type="date"
-          id="endDate"
-          min={startDate || format(new Date(), "yyyy-MM-dd")}
-          {...register("endDate", {
-            required: "End date is required",
-          })}
-        />
-      </FormRow>
+        <FormRow>
+          <Button
+            type="button"
+            variation="secondary"
+            size="small"
+            onClick={() => setShowCalendar(!showCalendar)}
+          >
+            {showCalendar ? "Hide Calendar" : "Show Calendar"}
+          </Button>
+        </FormRow>
 
-      <FormRow label="Cabin" error={errors?.cabinId?.message}>
-        <select
-          id="cabinId"
-          {...register("cabinId", { required: "Cabin is required" })}
-          disabled={!startDate || !endDate}
-        >
-          <option value="">Select a cabin...</option>
-          {availableCabins?.map((cabin) => (
-            <option key={cabin.id} value={cabin.id}>
-              {cabin.name} (Max {cabin.maxCapacity} guests) - $
-              {cabin.regularPrice}
-              {cabin.discount > 0 && ` (-$${cabin.discount} discount)`}
-            </option>
-          ))}
-        </select>
-      </FormRow>
+        {showCalendar && (
+          <CabinAvailabilityCalendar
+            availableCabins={availableCabins}
+            selectedCabinId={cabinId}
+            allBookings={allBookings}
+            onDateSelect={handleCalendarDateSelect}
+            selectedRange={
+              startDate && endDate
+                ? { from: new Date(startDate), to: new Date(endDate) }
+                : undefined
+            }
+          />
+        )}
 
-      <FormRow label="Number of guests" error={errors?.numGuests?.message}>
-        <Input
-          type="number"
-          id="numGuests"
-          min="1"
-          max={selectedCabin?.maxCapacity || 10}
-          defaultValue={1}
-          {...register("numGuests", {
-            required: "Number of guests is required",
-            min: { value: 1, message: "At least 1 guest required" },
-            max: {
-              value: selectedCabin?.maxCapacity || 10,
-              message: `Maximum ${selectedCabin?.maxCapacity || 10} guests`,
-            },
-          })}
-        />
-      </FormRow>
+        <FormRow label="Start date" error={errors?.startDate?.message}>
+          <Input
+            type="date"
+            id="startDate"
+            min={format(new Date(), "yyyy-MM-dd")}
+            {...register("startDate", {
+              required: "Start date is required",
+            })}
+          />
+        </FormRow>
 
-      <FormRow>
-        <Checkbox id="hasBreakfast" {...register("hasBreakfast")}>
-          Include breakfast? (${settings?.breakfastPrice || 15} per guest per
-          night)
-        </Checkbox>
-      </FormRow>
+        <FormRow label="End date" error={errors?.endDate?.message}>
+          <Input
+            type="date"
+            id="endDate"
+            min={startDate || format(new Date(), "yyyy-MM-dd")}
+            {...register("endDate", {
+              required: "End date is required",
+            })}
+          />
+        </FormRow>
 
-      <FormRow>
-        <Checkbox id="isPaid" {...register("isPaid")}>
-          Booking is paid?
-        </Checkbox>
-      </FormRow>
+        <FormRow label="Cabin" error={errors?.cabinId?.message}>
+          <select
+            id="cabinId"
+            {...register("cabinId", { required: "Cabin is required" })}
+            disabled={!startDate || !endDate}
+          >
+            <option value="">Select a cabin...</option>
+            {availableCabins?.map((cabin) => (
+              <option key={cabin.id} value={cabin.id}>
+                {cabin.name} (Max {cabin.maxCapacity} guests) - $
+                {cabin.regularPrice}
+                {cabin.discount > 0 && ` (-$${cabin.discount} discount)`}
+              </option>
+            ))}
+          </select>
+        </FormRow>
 
-      <FormRow label="Observations">
-        <Textarea
-          id="observations"
-          {...register("observations")}
-          placeholder="Any special requests or observations..."
-        />
-      </FormRow>
+        <FormRow label="Number of guests" error={errors?.numGuests?.message}>
+          <Input
+            type="number"
+            id="numGuests"
+            min="1"
+            max={selectedCabin?.maxCapacity || 10}
+            defaultValue={1}
+            {...register("numGuests", {
+              required: "Number of guests is required",
+              min: { value: 1, message: "At least 1 guest required" },
+              max: {
+                value: selectedCabin?.maxCapacity || 10,
+                message: `Maximum ${selectedCabin?.maxCapacity || 10} guests`,
+              },
+            })}
+          />
+        </FormRow>
 
-      {prices && numNights > 0 && (
-        <BookingPriceCalculator
-          cabin={selectedCabin}
-          numNights={numNights}
-          numGuests={numGuests}
-          hasBreakfast={hasBreakfast}
-          breakfastPrice={settings?.breakfastPrice}
-        />
-      )}
+        <FormRow>
+          <Checkbox id="hasBreakfast" {...register("hasBreakfast")}>
+            Include breakfast? (${settings?.breakfastPrice || 15} per guest per
+            night)
+          </Checkbox>
+        </FormRow>
 
-      <FormRow>
-        <Button
-          variation="secondary"
-          type="reset"
-          onClick={() => onCloseModal?.()}
-        >
-          Cancel
-        </Button>
-        <Button disabled={isCreating || !selectedGuest}>
-          {isCreating ? "Creating..." : "Create booking"}
-        </Button>
-      </FormRow>
-    </Form>
+        <FormRow>
+          <Checkbox id="isPaid" {...register("isPaid")}>
+            Booking is paid?
+          </Checkbox>
+        </FormRow>
+
+        <FormRow label="Observations">
+          <Textarea
+            id="observations"
+            {...register("observations")}
+            placeholder="Any special requests or observations..."
+          />
+        </FormRow>
+
+        {prices && numNights > 0 && (
+          <BookingPriceCalculator
+            cabin={selectedCabin}
+            numNights={numNights}
+            numGuests={numGuests}
+            hasBreakfast={hasBreakfast}
+            breakfastPrice={settings?.breakfastPrice}
+          />
+        )}
+
+        <FormRow>
+          <Button
+            variation="secondary"
+            type="reset"
+            onClick={() => onCloseModal?.()}
+          >
+            Cancel
+          </Button>
+          <Button disabled={isCreating || !selectedGuest}>
+            {isCreating ? "Creating..." : "Create booking"}
+          </Button>
+        </FormRow>
+      </Form>
+    </>
   );
 }
 
