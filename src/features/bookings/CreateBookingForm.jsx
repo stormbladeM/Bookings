@@ -16,11 +16,16 @@ import { useCabins } from "../cabins/useCabins";
 import { useAllBookings } from "./useAllBookings";
 import GuestSelector from "../guests/GuestSelector";
 import BookingPriceCalculator from "./BookingPriceCalculator";
-import { calculateNumNights, validateBooking } from "../../utils/bookingValidation";
+import {
+  calculateNumNights,
+  validateBooking,
+} from "../../utils/bookingValidation";
 import { calculateBookingPrices } from "../../utils/priceCalculation";
+import CabinAvailabilityCalendar from "./CabinAvailabilityCalendar";
 
 function CreateBookingForm({ onCloseModal }) {
-  const { register, handleSubmit, formState, setValue, watch, reset } = useForm();
+  const { register, handleSubmit, formState, setValue, watch, reset } =
+    useForm();
   const { errors } = formState;
   const { createBooking, isCreating } = useCreateBooking();
   const { settings, isLoading: isLoadingSettings } = useSettings();
@@ -55,7 +60,7 @@ function CreateBookingForm({ onCloseModal }) {
         numGuests,
         numNights,
         hasBreakfast,
-        settings?.breakfastPrice
+        settings?.breakfastPrice,
       )
     : null;
 
@@ -81,7 +86,11 @@ function CreateBookingForm({ onCloseModal }) {
     };
 
     // Validate booking
-    const validation = validateBooking(bookingData, selectedCabin, allBookings || []);
+    const validation = validateBooking(
+      bookingData,
+      selectedCabin,
+      allBookings || [],
+    );
 
     if (!validation.isValid) {
       // Show first error
@@ -100,7 +109,8 @@ function CreateBookingForm({ onCloseModal }) {
     });
   }
 
-  if (isLoadingSettings || isLoadingCabins || isLoadingBookings) return <Spinner />;
+  if (isLoadingSettings || isLoadingCabins || isLoadingBookings)
+    return <Spinner />;
 
   // Filter available cabins based on selected dates
   const availableCabins = cabins?.filter((cabin) => {
@@ -108,7 +118,8 @@ function CreateBookingForm({ onCloseModal }) {
 
     const hasConflict = allBookings.some((booking) => {
       if (booking.cabinId !== cabin.id) return false;
-      if (booking.status === "checked-out" || booking.status === "cancelled") return false;
+      if (booking.status === "checked-out" || booking.status === "cancelled")
+        return false;
 
       const bookingStart = new Date(booking.startDate);
       const bookingEnd = new Date(booking.endDate);
@@ -128,7 +139,10 @@ function CreateBookingForm({ onCloseModal }) {
   return (
     <Form onSubmit={handleSubmit(onSubmit)} type="modal">
       <FormRow label="Guest" error={!selectedGuest && "Guest is required"}>
-        <GuestSelector selectedGuest={selectedGuest} onSelectGuest={setSelectedGuest} />
+        <GuestSelector
+          selectedGuest={selectedGuest}
+          onSelectGuest={setSelectedGuest}
+        />
       </FormRow>
 
       <FormRow label="Start date" error={errors?.startDate?.message}>
@@ -189,11 +203,9 @@ function CreateBookingForm({ onCloseModal }) {
       </FormRow>
 
       <FormRow>
-        <Checkbox
-          id="hasBreakfast"
-          {...register("hasBreakfast")}
-        >
-          Include breakfast? (${settings?.breakfastPrice || 15} per guest per night)
+        <Checkbox id="hasBreakfast" {...register("hasBreakfast")}>
+          Include breakfast? (${settings?.breakfastPrice || 15} per guest per
+          night)
         </Checkbox>
       </FormRow>
 
@@ -222,7 +234,11 @@ function CreateBookingForm({ onCloseModal }) {
       )}
 
       <FormRow>
-        <Button variation="secondary" type="reset" onClick={() => onCloseModal?.()}>
+        <Button
+          variation="secondary"
+          type="reset"
+          onClick={() => onCloseModal?.()}
+        >
           Cancel
         </Button>
         <Button disabled={isCreating || !selectedGuest}>
