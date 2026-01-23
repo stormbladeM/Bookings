@@ -173,11 +173,8 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
-  // Handle inline form submission with event prevention
-  const onSubmitGuestForm = (data, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
+  // Handle inline form submission
+  const onSubmitGuestForm = (data) => {
     createGuest(data, {
       onSuccess: (newGuest) => {
         reset();
@@ -188,15 +185,17 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
   };
 
   const handleCancelForm = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
     reset();
     setShowCreateForm(false);
   };
 
+  // Wrap handleSubmit to prevent default form submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // Call react-hook-form's handleSubmit
     handleSubmit(onSubmitGuestForm)(e);
   };
 
@@ -230,12 +229,12 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       </SearchContainer>
 
       {showCreateForm && (
-        <FormContainer>
+        <FormContainer onClick={(e) => e.stopPropagation()}>
           <InlineForm onSubmit={handleFormSubmit}>
             <FormRow label="Full name" error={errors?.fullName?.message}>
               <Input
                 type="text"
-                id="fullName"
+                id="guestFullName"
                 disabled={isCreating}
                 {...register("fullName", {
                   required: "Full name is required",
@@ -246,7 +245,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
             <FormRow label="Email address" error={errors?.email?.message}>
               <Input
                 type="email"
-                id="email"
+                id="guestEmail"
                 disabled={isCreating}
                 {...register("email", {
                   required: "Email is required",
@@ -261,7 +260,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
             <FormRow label="Nationality" error={errors?.nationality?.message}>
               <Input
                 type="text"
-                id="nationality"
+                id="guestNationality"
                 disabled={isCreating}
                 {...register("nationality", {
                   required: "Nationality is required",
@@ -272,7 +271,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
             <FormRow label="National ID" error={errors?.nationalID?.message}>
               <Input
                 type="text"
-                id="nationalID"
+                id="guestNationalID"
                 disabled={isCreating}
                 {...register("nationalID", {
                   required: "National ID is required",
@@ -283,7 +282,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
             <FormRow label="Country flag (emoji or URL)">
               <Input
                 type="text"
-                id="countryFlag"
+                id="guestCountryFlag"
                 disabled={isCreating}
                 placeholder="e.g., 🇺🇸 or flag URL"
                 {...register("countryFlag")}
