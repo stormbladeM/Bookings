@@ -170,30 +170,21 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
     : null;
 
   const onSubmitGuestForm = (data) => {
-    console.log("🎯 Guest form submission started", data);
     createGuest(data, {
       onSuccess: (newGuest) => {
-        console.log("✅ Guest created successfully:", newGuest);
         reset();
         setShowCreateForm(false);
         onSelectGuest(newGuest);
-        console.log("🔄 Guest auto-selected");
-      },
-      onError: (error) => {
-        console.error("❌ Guest creation failed:", error);
       },
     });
   };
 
   const handleCancelForm = () => {
-    console.log("❌ Cancel button clicked");
     reset();
     setShowCreateForm(false);
   };
 
-  // Handle create button click - manually trigger validation and submission
   const handleCreateClick = () => {
-    console.log("🔘 Create button clicked");
     handleSubmit(onSubmitGuestForm)();
   };
 
@@ -220,10 +211,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
           variation="secondary"
           size="small"
           type="button"
-          onClick={() => {
-            console.log("🔘 Toggle form button clicked. Current state:", showCreateForm);
-            setShowCreateForm(!showCreateForm);
-          }}
+          onClick={() => setShowCreateForm(!showCreateForm)}
         >
           {showCreateForm ? "Cancel" : "New Guest"}
         </Button>
