@@ -18,12 +18,12 @@ function Bookings() {
         <BookingTable />
 
         <Modal>
-          <Modal.Open opens="booking-form">
+          <Modal.open opens="booking-form">
             <Button>Create new booking</Button>
-          </Modal.Open>
-          <Modal.Window name="booking-form">
+          </Modal.open>
+          <Modal.window name="booking-form">
             <CreateBookingForm />
-          </Modal.Window>
+          </Modal.window>
         </Modal>
       </Row>
     </>

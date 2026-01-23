@@ -159,7 +159,7 @@ function CreateBookingForm({ onCloseModal }) {
 
   return (
     <>
-      <BookingTemplates onSelectTemplate={handleTemplateSelect} />
+      {/* <BookingTemplates onSelectTemplate={handleTemplateSelect} /> */}
 
       <Form onSubmit={handleSubmit(onSubmit)} type="modal">
         <FormRow label="Guest" error={!selectedGuest && "Guest is required"}>

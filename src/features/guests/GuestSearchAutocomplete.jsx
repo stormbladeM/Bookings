@@ -3,7 +3,7 @@ import Select from "react-select";
 import styled from "styled-components";
 import Button from "../../ui/Button";
 import { useGuests } from "./useGuests";
-import CreateGuestForm from "./CreateGuestForm";
+import CreateGuestForm from "./CreateGuestForm"; // Re-trigger HMR
 import Modal from "../../ui/Modal";
 import Spinner from "../../ui/Spinner";
 
@@ -85,7 +85,8 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
     value: guest.id,
     label: guest.fullName,
     guest: guest,
-    searchableText: `${guest.fullName} ${guest.email} ${guest.nationality}`.toLowerCase(),
+    searchableText:
+      `${guest.fullName} ${guest.email} ${guest.nationality}`.toLowerCase(),
   }));
 
   // Custom filter function
@@ -146,14 +147,14 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       </SelectWrapper>
 
       <Modal>
-        <Modal.Open opens="guest-form">
+        <Modal.open opens="guest-form">
           <Button variation="secondary" size="small">
             New Guest
           </Button>
-        </Modal.Open>
-        <Modal.Window name="guest-form">
+        </Modal.open>
+        <Modal.window name="guest-form">
           <CreateGuestForm />
-        </Modal.Window>
+        </Modal.window>
       </Modal>
     </Container>
   );
