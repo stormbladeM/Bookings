@@ -64,36 +64,52 @@ export async function getStaysAfterDate(date) {
   return data;
 }
 
-// Activity means that there is a check in or a check out today
+// Activity means all activities that happened today:
+// - Bookings created today
+// - Check-ins today (arriving)
+// - Check-outs today (departing)
 export async function getStaysTodayActivity() {
   const today = getTodayDate();
-  console.log("📅 Today's date for query:", today);
-  
-  // First, let's check ALL bookings to debug
-  const { data: allBookings } = await supabase
-    .from("bookings")
-    .select("id, status, startDate, endDate");
-  
-  console.log("📊 All bookings in database:", allBookings);
+  const todayStart = getToday(); // Start of today (00:00:00)
+  const todayEnd = getToday({ end: true }); // End of today (23:59:59)
   
   const { data, error } = await supabase
     .from("bookings")
-    .select("id, status, numNights, startDate, endDate, guests(fullName, nationality, countryFlag)")
+    .select("id, status, numNights, startDate, endDate, created_at, guests(fullName, nationality, countryFlag)")
     .or(
-      `and(status.eq.unconfirmed,startDate.eq.${today}),and(status.eq.checked-in,endDate.eq.${today})`
+      `and(status.eq.unconfirmed,startDate.eq.${today}),and(status.eq.checked-in,endDate.eq.${today}),and(status.eq.checked-out,endDate.eq.${today}),and(created_at.gte.${todayStart},created_at.lte.${todayEnd})`
     )
-    .order("created_at");
-
-  console.log("🔍 Today Activity Query Result:", { data, error });
-  console.log("🎯 Looking for bookings where:");
-  console.log("   - status='unconfirmed' AND startDate='" + today + "'");
-  console.log("   - OR status='checked-in' AND endDate='" + today + "'");
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("Today Activity Query Error:", error);
     throw new Error("Bookings could not get loaded");
   }
-  return data;
+  
+  // Determine activity type for each booking
+  const activities = data?.map(booking => {
+    let activityType = 'created';
+    
+    // Check-in today (arriving)
+    if (booking.status === 'unconfirmed' && booking.startDate === today) {
+      activityType = 'arriving';
+    }
+    // Check-out today (departing - currently checked in)
+    else if (booking.status === 'checked-in' && booking.endDate === today) {
+      activityType = 'departing';
+    }
+    // Already checked out today
+    else if (booking.status === 'checked-out' && booking.endDate === today) {
+      activityType = 'checked-out';
+    }
+    
+    return {
+      ...booking,
+      activityType
+    };
+  }) || [];
+  
+  return activities;
 }
 
 export async function updateBooking(id, obj) {
@@ -138,8 +154,6 @@ export async function getBooking(id) {
 
 // NEW: Create a new booking
 export async function createBooking(newBooking) {
-  console.log("🎯 Creating booking with data:", newBooking);
-  
   const { data, error } = await supabase
     .from("bookings")
     .insert([newBooking])
@@ -151,7 +165,6 @@ export async function createBooking(newBooking) {
     throw new Error("Booking could not be created");
   }
 
-  console.log("✅ Booking created:", data);
   return data;
 }
 
