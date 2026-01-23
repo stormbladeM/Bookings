@@ -173,8 +173,11 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
-  // Handle inline form submission
-  const onSubmitGuestForm = (data) => {
+  // Handle inline form submission with event prevention
+  const onSubmitGuestForm = (data, e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
     createGuest(data, {
       onSuccess: (newGuest) => {
         reset();
@@ -184,9 +187,17 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
     });
   };
 
-  const handleCancelForm = () => {
+  const handleCancelForm = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     reset();
     setShowCreateForm(false);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleSubmit(onSubmitGuestForm)(e);
   };
 
   return (
@@ -220,7 +231,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
 
       {showCreateForm && (
         <FormContainer>
-          <InlineForm onSubmit={handleSubmit(onSubmitGuestForm)}>
+          <InlineForm onSubmit={handleFormSubmit}>
             <FormRow label="Full name" error={errors?.fullName?.message}>
               <Input
                 type="text"
