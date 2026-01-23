@@ -6,31 +6,17 @@ import Button from "../../ui/Button";
 import { useCreateGuest } from "./useCreateGuest";
 
 function CreateGuestForm({ onCloseModal }) {
-  const { register, handleSubmit, reset, formState } = useForm();
+  const { register, handleSubmit, formState, reset } = useForm();
   const { errors } = formState;
   const { createGuest, isCreating } = useCreateGuest();
 
   function onSubmit(data) {
-    // For now, we'll just use a placeholder for the flag or omit it if the DB allows.
-    // Ideally, we'd have a country selector that provides the flag URL.
-    // Let's assume a default or that the backend handles it, or just pass a placeholder.
-    // The data-guests.js shows full https://flagcdn.com URLs.
-    // We can try to guess it or just leave it blank if not required.
-    // Looking at the error "Guest is required" in CreateBookingForm, having a guest is critical.
-
-    // Simple implementation:
-    createGuest(
-      {
-        ...data,
-        countryFlag: data.countryFlag || `https://flagcdn.com/un.svg`,
+    createGuest(data, {
+      onSuccess: () => {
+        reset();
+        onCloseModal?.();
       },
-      {
-        onSuccess: () => {
-          reset();
-          onCloseModal?.();
-        },
-      },
-    );
+    });
   }
 
   return (
@@ -38,12 +24,14 @@ function CreateGuestForm({ onCloseModal }) {
       onSubmit={handleSubmit(onSubmit)}
       type={onCloseModal ? "modal" : "regular"}
     >
-      <FormRow label="Full Name" error={errors?.fullName?.message}>
+      <FormRow label="Full name" error={errors?.fullName?.message}>
         <Input
           type="text"
           id="fullName"
           disabled={isCreating}
-          {...register("fullName", { required: "This field is required" })}
+          {...register("fullName", {
+            required: "Full name is required",
+          })}
         />
       </FormRow>
 
@@ -53,10 +41,10 @@ function CreateGuestForm({ onCloseModal }) {
           id="email"
           disabled={isCreating}
           {...register("email", {
-            required: "This field is required",
+            required: "Email is required",
             pattern: {
-              value: /\S+@\S+\.\S+/,
-              message: "Please provide a valid email address",
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: "Invalid email address",
             },
           })}
         />
@@ -67,7 +55,9 @@ function CreateGuestForm({ onCloseModal }) {
           type="text"
           id="nationality"
           disabled={isCreating}
-          {...register("nationality", { required: "This field is required" })}
+          {...register("nationality", {
+            required: "Nationality is required",
+          })}
         />
       </FormRow>
 
@@ -76,22 +66,36 @@ function CreateGuestForm({ onCloseModal }) {
           type="text"
           id="nationalID"
           disabled={isCreating}
-          {...register("nationalID", { required: "This field is required" })}
+          {...register("nationalID", {
+            required: "National ID is required",
+          })}
+        />
+      </FormRow>
+
+      <FormRow label="Country flag (emoji or URL)">
+        <Input
+          type="text"
+          id="countryFlag"
+          disabled={isCreating}
+          placeholder="e.g., 🇺🇸 or flag URL"
+          {...register("countryFlag")}
         />
       </FormRow>
 
       <FormRow>
-        {/* If we are in a modal */}
         {onCloseModal && (
           <Button
             variation="secondary"
             type="reset"
-            onClick={() => onCloseModal()}
+            disabled={isCreating}
+            onClick={() => onCloseModal?.()}
           >
             Cancel
           </Button>
         )}
-        <Button disabled={isCreating}>Create new guest</Button>
+        <Button disabled={isCreating}>
+          {isCreating ? "Creating..." : "Create guest"}
+        </Button>
       </FormRow>
     </Form>
   );
