@@ -142,8 +142,12 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
-  const handleGuestCreated = () => {
+  // Handle successful guest creation
+  const handleGuestCreated = (newGuest) => {
+    // Hide the form
     setShowCreateForm(false);
+    // Auto-select the newly created guest
+    onSelectGuest(newGuest);
   };
 
   return (
@@ -177,7 +181,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
 
       {showCreateForm && (
         <FormContainer>
-          <CreateGuestForm onCloseModal={handleGuestCreated} />
+          <CreateGuestForm onGuestCreated={handleGuestCreated} />
         </FormContainer>
       )}
     </Container>
