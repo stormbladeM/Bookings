@@ -96,15 +96,19 @@ function CheckinBooking() {
           {!breakFast
             ? formatCurrency(totalPrice)
             : `${formatCurrency(
-                optionalBreakfastPrice + totalPrice
+                optionalBreakfastPrice + totalPrice,
               )} (${formatCurrency(totalPrice)} + ${formatCurrency(
-                optionalBreakfastPrice
+                optionalBreakfastPrice,
               )})`}
         </Checkbox>
       </Box>
 
       <ButtonGroup>
-        <Button onClick={handleCheckin} disabled={!confirmPaid || isCheckingIn}>
+        <Button
+          onClick={handleCheckin}
+          disabled={!confirmPaid || isCheckingIn}
+          sizes="small"
+        >
           Check in booking #{bookingId}
         </Button>
         <Button variation="secondary" onClick={moveBack}>
