@@ -12,16 +12,16 @@ const StyledToday = styled.div`
   border: 1px solid var(--color-grey-100);
   border-radius: var(--border-radius-md);
 
-  padding: 3.2rem;
+  padding: 2.4rem 3.2rem;
   display: flex;
   flex-direction: column;
   gap: 2.4rem;
   grid-column: 1 / span 2;
-  padding-top: 2.4rem;
 `;
 
 const TodayList = styled.ul`
-  overflow: scroll;
+  max-height: 32rem;
+  overflow-y: auto;
   overflow-x: hidden;
 
   /* Removing scrollbars for webkit, firefox, and ms, respectively */
@@ -34,34 +34,53 @@ const TodayList = styled.ul`
 
 const NoActivity = styled.p`
   text-align: center;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 500;
-  margin-top: 0.8rem;
+  margin-top: 0.4rem;
+  color: var(--color-grey-500);
+`;
+
+const SpinnerWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2.4rem 0;
 `;
 
 function TodayActivity() {
   const { stays, isLoading } = useTodayActivity();
 
   if (isLoading) {
-    return <StyledToday>Loading...</StyledToday>;
+    return (
+      <StyledToday>
+        <Row type="horizontal">
+          <Heading as="h2">Today</Heading>
+        </Row>
+        <SpinnerWrapper>
+          <Spinner />
+        </SpinnerWrapper>
+      </StyledToday>
+    );
   }
+
+  const hasActivity = stays && stays.length > 0;
+
   return (
     <StyledToday>
       <Row type="horizontal">
         <Heading as="h2">Today</Heading>
       </Row>
-      {!isLoading ? (
-        stays?.length > 0 ? (
-          <TodayList>
-            {stays.map((stay) => (
-              <TodayItem key={stay.id} stay={stay} />
-            ))}
-          </TodayList>
-        ) : (
-          <NoActivity>No activity today</NoActivity>
-        )
+
+      {hasActivity ? (
+        <TodayList>
+          {stays.map((stay) => (
+            <TodayItem key={stay.id} stay={stay} />
+          ))}
+        </TodayList>
       ) : (
-        <Spinner />
+        <NoActivity>
+          No activity today yet. Create or check in a booking to see it here.
+        </NoActivity>
       )}
     </StyledToday>
   );
