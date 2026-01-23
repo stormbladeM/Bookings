@@ -1,4 +1,4 @@
-import { differenceInDays, isAfter, isBefore, parseISO } from "date-fns";
+import { differenceInDays, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 
 // Validate date range
 export function validateDateRange(startDate, endDate) {
@@ -13,7 +13,11 @@ export function validateDateRange(startDate, endDate) {
     return { isValid: false, error: "Start date must be before end date" };
   }
 
-  if (isBefore(start, new Date())) {
+  // Compare only the date part, not the time
+  const today = startOfDay(new Date());
+  const startDay = startOfDay(start);
+
+  if (isBefore(startDay, today)) {
     return { isValid: false, error: "Start date cannot be in the past" };
   }
 
