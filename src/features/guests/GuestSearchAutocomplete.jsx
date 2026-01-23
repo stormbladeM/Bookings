@@ -10,6 +10,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
 `;
 
 const SearchContainer = styled.div`
@@ -20,6 +21,7 @@ const SearchContainer = styled.div`
 
 const SelectWrapper = styled.div`
   flex: 1;
+  min-width: 0; /* Prevents overflow */
 `;
 
 const FormContainer = styled.div`
@@ -28,6 +30,15 @@ const FormContainer = styled.div`
   background-color: var(--color-grey-50);
   border: 1px solid var(--color-grey-200);
   border-radius: var(--border-radius-md);
+  max-width: 100%;
+  overflow: hidden;
+
+  /* Make form inputs fit */
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
 `;
 
 const customStyles = {
@@ -41,6 +52,7 @@ const customStyles = {
     padding: "0.4rem",
     fontSize: "1.4rem",
     boxShadow: state.isFocused ? "var(--shadow-sm)" : "none",
+    minWidth: 0,
     "&:hover": {
       borderColor: "var(--color-brand-600)",
     },
