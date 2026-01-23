@@ -25,12 +25,15 @@ const Guest = styled.div`
 `;
 
 function TodayItem({ stay }) {
-  const { id, status, guests, numNights } = stay;
+  const { id, status, guests, numNights, activityType } = stay;
   
   return (
     <StyledTodayItem>
-      {status === "unconfirmed" && <Tag type="green">Arriving</Tag>}
-      {status === "checked-in" && <Tag type="blue">Departing</Tag>}
+      {/* Activity Type Tags */}
+      {activityType === 'arriving' && <Tag type="green">Arriving</Tag>}
+      {activityType === 'departing' && <Tag type="blue">Departing</Tag>}
+      {activityType === 'checked-out' && <Tag type="silver">Checked Out</Tag>}
+      {activityType === 'created' && <Tag type="yellow">New Booking</Tag>}
       
       <Flag src={guests.countryFlag} alt={`Flag of ${guests.nationality}`} />
       <Guest>{guests.fullName}</Guest>
@@ -38,7 +41,8 @@ function TodayItem({ stay }) {
         {numNights} night{numNights > 1 ? "s" : ""}
       </div>
 
-      {status === "unconfirmed" && (
+      {/* Actions based on activity type */}
+      {activityType === 'arriving' && (
         <Button
           size="small"
           variation="primary"
@@ -48,7 +52,17 @@ function TodayItem({ stay }) {
           Check in
         </Button>
       )}
-      {status === "checked-in" && <CheckOutButton bookingId={id} />}
+      {activityType === 'departing' && <CheckOutButton bookingId={id} />}
+      {(activityType === 'checked-out' || activityType === 'created') && (
+        <Button
+          size="small"
+          variation="secondary"
+          as={Link}
+          to={`/bookings/${id}`}
+        >
+          Details
+        </Button>
+      )}
     </StyledTodayItem>
   );
 }
