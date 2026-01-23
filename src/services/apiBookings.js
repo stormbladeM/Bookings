@@ -69,6 +69,13 @@ export async function getStaysTodayActivity() {
   const today = getTodayDate();
   console.log("📅 Today's date for query:", today);
   
+  // First, let's check ALL bookings to debug
+  const { data: allBookings } = await supabase
+    .from("bookings")
+    .select("id, status, startDate, endDate");
+  
+  console.log("📊 All bookings in database:", allBookings);
+  
   const { data, error } = await supabase
     .from("bookings")
     .select("id, status, numNights, startDate, endDate, guests(fullName, nationality, countryFlag)")
@@ -78,6 +85,9 @@ export async function getStaysTodayActivity() {
     .order("created_at");
 
   console.log("🔍 Today Activity Query Result:", { data, error });
+  console.log("🎯 Looking for bookings where:");
+  console.log("   - status='unconfirmed' AND startDate='" + today + "'");
+  console.log("   - OR status='checked-in' AND endDate='" + today + "'");
 
   if (error) {
     console.error(error);
@@ -128,6 +138,8 @@ export async function getBooking(id) {
 
 // NEW: Create a new booking
 export async function createBooking(newBooking) {
+  console.log("🎯 Creating booking with data:", newBooking);
+  
   const { data, error } = await supabase
     .from("bookings")
     .insert([newBooking])
@@ -139,6 +151,7 @@ export async function createBooking(newBooking) {
     throw new Error("Booking could not be created");
   }
 
+  console.log("✅ Booking created:", data);
   return data;
 }
 
