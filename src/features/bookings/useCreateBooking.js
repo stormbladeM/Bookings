@@ -12,7 +12,7 @@ export function useCreateBooking() {
       // Invalidate multiple queries to refresh all related data
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["allBookings"] });
-      queryClient.invalidateQueries({ queryKey: ["todayActivity"] });
+      queryClient.invalidateQueries({ queryKey: ["today-activity"] });
     },
     onError: (err) => {
       console.error("Booking creation error:", err);
