@@ -1,4 +1,4 @@
-import { formatDistance, parseISO } from "date-fns";
+import { formatDistance, parseISO, format } from "date-fns";
 import { differenceInDays } from "date-fns";
 
 // We want to make this function work for both Date objects and strings (which come from Supabase)
@@ -22,6 +22,11 @@ export const getToday = function (options = {}) {
     today.setUTCHours(23, 59, 59, 999);
   else today.setUTCHours(0, 0, 0, 0);
   return today.toISOString();
+};
+
+// Get today's date in YYYY-MM-DD format (for comparing with date-only fields)
+export const getTodayDate = function () {
+  return format(new Date(), "yyyy-MM-dd");
 };
 
 export const formatCurrency = (value) =>
