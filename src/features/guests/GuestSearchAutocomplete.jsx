@@ -24,7 +24,7 @@ const SearchContainer = styled.div`
 
 const SelectWrapper = styled.div`
   flex: 1;
-  min-width: 0; /* Prevents overflow */
+  min-width: 0;
 `;
 
 const FormContainer = styled.div`
@@ -36,18 +36,11 @@ const FormContainer = styled.div`
   max-width: 100%;
   overflow: hidden;
 
-  /* Make form inputs fit */
   input,
   select,
   textarea {
     max-width: 100%;
   }
-`;
-
-const InlineForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
 `;
 
 const ButtonGroup = styled.div`
@@ -125,7 +118,6 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
 
   if (isLoading) return <Spinner />;
 
-  // Format guests for react-select
   const guestOptions = guests?.map((guest) => ({
     value: guest.id,
     label: guest.fullName,
@@ -134,13 +126,11 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       `${guest.fullName} ${guest.email} ${guest.nationality}`.toLowerCase(),
   }));
 
-  // Custom filter function
   const filterOption = (option, inputValue) => {
     if (!inputValue) return true;
     return option.data.searchableText.includes(inputValue.toLowerCase());
   };
 
-  // Custom option component with additional details
   const formatOptionLabel = ({ guest }) => (
     <div>
       <div style={{ fontWeight: "600", marginBottom: "0.2rem" }}>
@@ -173,29 +163,35 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
-  // Handle inline form submission
   const onSubmitGuestForm = (data) => {
+    console.log("🎯 Guest form submission started", data);
     createGuest(data, {
       onSuccess: (newGuest) => {
+        console.log("✅ Guest created successfully:", newGuest);
         reset();
         setShowCreateForm(false);
         onSelectGuest(newGuest);
+        console.log("🔄 Guest auto-selected");
+      },
+      onError: (error) => {
+        console.error("❌ Guest creation failed:", error);
       },
     });
   };
 
   const handleCancelForm = (e) => {
+    console.log("❌ Cancel button clicked");
     e.preventDefault();
     e.stopPropagation();
     reset();
     setShowCreateForm(false);
   };
 
-  // Wrap handleSubmit to prevent default form submission
   const handleFormSubmit = (e) => {
+    console.log("📝 Form submit event triggered");
     e.preventDefault();
     e.stopPropagation();
-    // Call react-hook-form's handleSubmit
+    console.log("🛑 Default prevented and propagation stopped");
     handleSubmit(onSubmitGuestForm)(e);
   };
 
@@ -222,7 +218,10 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
           variation="secondary"
           size="small"
           type="button"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            console.log("🔘 Toggle form button clicked. Current state:", showCreateForm);
+            setShowCreateForm(!showCreateForm);
+          }}
         >
           {showCreateForm ? "Cancel" : "New Guest"}
         </Button>
@@ -230,7 +229,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
 
       {showCreateForm && (
         <FormContainer onClick={(e) => e.stopPropagation()}>
-          <InlineForm onSubmit={handleFormSubmit}>
+          <form onSubmit={handleFormSubmit}>
             <FormRow label="Full name" error={errors?.fullName?.message}>
               <Input
                 type="text"
@@ -302,7 +301,7 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
                 {isCreating ? "Creating..." : "Create guest"}
               </Button>
             </ButtonGroup>
-          </InlineForm>
+          </form>
         </FormContainer>
       )}
     </Container>
