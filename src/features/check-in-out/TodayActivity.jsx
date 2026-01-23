@@ -42,6 +42,12 @@ const NoActivity = styled.p`
 function TodayActivity() {
   const { stays, isLoading } = useTodayActivity();
 
+  console.log("📅 Today Activity Debug:", {
+    isLoading,
+    staysCount: stays?.length,
+    stays,
+  });
+
   if (isLoading) {
     return <StyledToday>Loading...</StyledToday>;
   }
