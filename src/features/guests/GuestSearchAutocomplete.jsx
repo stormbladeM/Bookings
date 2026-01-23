@@ -3,7 +3,10 @@ import Select from "react-select";
 import styled from "styled-components";
 import Button from "../../ui/Button";
 import { useGuests } from "./useGuests";
-import CreateGuestForm from "./CreateGuestForm";
+import { useCreateGuest } from "./useCreateGuest";
+import { useForm } from "react-hook-form";
+import FormRow from "../../ui/FormRow";
+import Input from "../../ui/Input";
 import Spinner from "../../ui/Spinner";
 
 const Container = styled.div`
@@ -39,6 +42,19 @@ const FormContainer = styled.div`
   textarea {
     max-width: 100%;
   }
+`;
+
+const InlineForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
 `;
 
 const customStyles = {
@@ -103,6 +119,9 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
   const { guests, isLoading } = useGuests();
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const { register, handleSubmit, formState, reset } = useForm();
+  const { errors } = formState;
+  const { createGuest, isCreating } = useCreateGuest();
 
   if (isLoading) return <Spinner />;
 
@@ -154,12 +173,20 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
-  // Handle successful guest creation
-  const handleGuestCreated = (newGuest) => {
-    // Hide the form
+  // Handle inline form submission
+  const onSubmitGuestForm = (data) => {
+    createGuest(data, {
+      onSuccess: (newGuest) => {
+        reset();
+        setShowCreateForm(false);
+        onSelectGuest(newGuest);
+      },
+    });
+  };
+
+  const handleCancelForm = () => {
+    reset();
     setShowCreateForm(false);
-    // Auto-select the newly created guest
-    onSelectGuest(newGuest);
   };
 
   return (
@@ -193,7 +220,79 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
 
       {showCreateForm && (
         <FormContainer>
-          <CreateGuestForm onGuestCreated={handleGuestCreated} />
+          <InlineForm onSubmit={handleSubmit(onSubmitGuestForm)}>
+            <FormRow label="Full name" error={errors?.fullName?.message}>
+              <Input
+                type="text"
+                id="fullName"
+                disabled={isCreating}
+                {...register("fullName", {
+                  required: "Full name is required",
+                })}
+              />
+            </FormRow>
+
+            <FormRow label="Email address" error={errors?.email?.message}>
+              <Input
+                type="email"
+                id="email"
+                disabled={isCreating}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
+            </FormRow>
+
+            <FormRow label="Nationality" error={errors?.nationality?.message}>
+              <Input
+                type="text"
+                id="nationality"
+                disabled={isCreating}
+                {...register("nationality", {
+                  required: "Nationality is required",
+                })}
+              />
+            </FormRow>
+
+            <FormRow label="National ID" error={errors?.nationalID?.message}>
+              <Input
+                type="text"
+                id="nationalID"
+                disabled={isCreating}
+                {...register("nationalID", {
+                  required: "National ID is required",
+                })}
+              />
+            </FormRow>
+
+            <FormRow label="Country flag (emoji or URL)">
+              <Input
+                type="text"
+                id="countryFlag"
+                disabled={isCreating}
+                placeholder="e.g., 🇺🇸 or flag URL"
+                {...register("countryFlag")}
+              />
+            </FormRow>
+
+            <ButtonGroup>
+              <Button
+                variation="secondary"
+                type="button"
+                disabled={isCreating}
+                onClick={handleCancelForm}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "Creating..." : "Create guest"}
+              </Button>
+            </ButtonGroup>
+          </InlineForm>
         </FormContainer>
       )}
     </Container>
