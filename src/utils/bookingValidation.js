@@ -1,7 +1,7 @@
-import { differenceInDays, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
+import { differenceInDays, isAfter, isBefore, parseISO, startOfDay, subDays } from "date-fns";
 
 // Validate date range
-export function validateDateRange(startDate, endDate) {
+export function validateDateRange(startDate, endDate, allowPastDates = false) {
   if (!startDate || !endDate) {
     return { isValid: false, error: "Both start and end dates are required" };
   }
@@ -14,11 +14,13 @@ export function validateDateRange(startDate, endDate) {
   }
 
   // Compare only the date part, not the time
-  const today = startOfDay(new Date());
-  const startDay = startOfDay(start);
+  if (!allowPastDates) {
+    const today = startOfDay(new Date());
+    const startDay = startOfDay(start);
 
-  if (isBefore(startDay, today)) {
-    return { isValid: false, error: "Start date cannot be in the past" };
+    if (isBefore(startDay, today)) {
+      return { isValid: false, error: "Start date cannot be in the past" };
+    }
   }
 
   return { isValid: true, error: null };
@@ -83,7 +85,7 @@ export function checkDateConflict(cabinId, startDate, endDate, existingBookings)
 }
 
 // Validate entire booking object
-export function validateBooking(bookingData, cabin, existingBookings = []) {
+export function validateBooking(bookingData, cabin, existingBookings = [], allowPastDates = false) {
   const errors = {};
 
   // Validate guest
@@ -97,7 +99,7 @@ export function validateBooking(bookingData, cabin, existingBookings = []) {
   }
 
   // Validate dates
-  const dateValidation = validateDateRange(bookingData.startDate, bookingData.endDate);
+  const dateValidation = validateDateRange(bookingData.startDate, bookingData.endDate, allowPastDates);
   if (!dateValidation.isValid) {
     errors.dates = dateValidation.error;
   }
@@ -110,16 +112,18 @@ export function validateBooking(bookingData, cabin, existingBookings = []) {
     }
   }
 
-  // Check for conflicts
-  const conflictCheck = checkDateConflict(
-    bookingData.cabinId,
-    bookingData.startDate,
-    bookingData.endDate,
-    existingBookings
-  );
+  // Check for conflicts (only if not allowing past dates, meaning it's a new booking)
+  if (!allowPastDates) {
+    const conflictCheck = checkDateConflict(
+      bookingData.cabinId,
+      bookingData.startDate,
+      bookingData.endDate,
+      existingBookings
+    );
 
-  if (conflictCheck.hasConflict) {
-    errors.dates = "This cabin is already booked for the selected dates";
+    if (conflictCheck.hasConflict) {
+      errors.dates = "This cabin is already booked for the selected dates";
+    }
   }
 
   return {
