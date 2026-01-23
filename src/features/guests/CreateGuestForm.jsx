@@ -5,16 +5,21 @@ import Input from "../../ui/Input";
 import Button from "../../ui/Button";
 import { useCreateGuest } from "./useCreateGuest";
 
-function CreateGuestForm({ onCloseModal }) {
+function CreateGuestForm({ onCloseModal, onGuestCreated }) {
   const { register, handleSubmit, formState, reset } = useForm();
   const { errors } = formState;
   const { createGuest, isCreating } = useCreateGuest();
 
   function onSubmit(data) {
     createGuest(data, {
-      onSuccess: () => {
+      onSuccess: (newGuest) => {
         reset();
-        onCloseModal?.();
+        // Pass the newly created guest back if callback provided
+        if (onGuestCreated) {
+          onGuestCreated(newGuest);
+        } else if (onCloseModal) {
+          onCloseModal();
+        }
       },
     });
   }
