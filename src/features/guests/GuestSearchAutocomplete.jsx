@@ -43,6 +43,12 @@ const FormContainer = styled.div`
   }
 `;
 
+const FormFields = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 1rem;
@@ -179,20 +185,16 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
     });
   };
 
-  const handleCancelForm = (e) => {
+  const handleCancelForm = () => {
     console.log("❌ Cancel button clicked");
-    e.preventDefault();
-    e.stopPropagation();
     reset();
     setShowCreateForm(false);
   };
 
-  const handleFormSubmit = (e) => {
-    console.log("📝 Form submit event triggered");
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("🛑 Default prevented and propagation stopped");
-    handleSubmit(onSubmitGuestForm)(e);
+  // Handle create button click - manually trigger validation and submission
+  const handleCreateClick = () => {
+    console.log("🔘 Create button clicked");
+    handleSubmit(onSubmitGuestForm)();
   };
 
   return (
@@ -228,8 +230,8 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       </SearchContainer>
 
       {showCreateForm && (
-        <FormContainer onClick={(e) => e.stopPropagation()}>
-          <form onSubmit={handleFormSubmit}>
+        <FormContainer>
+          <FormFields>
             <FormRow label="Full name" error={errors?.fullName?.message}>
               <Input
                 type="text"
@@ -297,11 +299,11 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating}>
+              <Button type="button" disabled={isCreating} onClick={handleCreateClick}>
                 {isCreating ? "Creating..." : "Create guest"}
               </Button>
             </ButtonGroup>
-          </form>
+          </FormFields>
         </FormContainer>
       )}
     </Container>
