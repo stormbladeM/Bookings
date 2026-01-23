@@ -24,11 +24,17 @@ function CreateGuestForm({ onCloseModal, onGuestCreated }) {
     });
   }
 
+  function handleCancel() {
+    reset();
+    if (onGuestCreated) {
+      // Just collapse the form, don't close anything
+      return;
+    }
+    onCloseModal?.();
+  }
+
   return (
-    <Form
-      onSubmit={handleSubmit(onSubmit)}
-      type={onCloseModal ? "modal" : "regular"}
-    >
+    <Form onSubmit={handleSubmit(onSubmit)} type="regular">
       <FormRow label="Full name" error={errors?.fullName?.message}>
         <Input
           type="text"
@@ -88,17 +94,17 @@ function CreateGuestForm({ onCloseModal, onGuestCreated }) {
       </FormRow>
 
       <FormRow>
-        {onCloseModal && (
+        {(onCloseModal || onGuestCreated) && (
           <Button
             variation="secondary"
-            type="reset"
+            type="button"
             disabled={isCreating}
-            onClick={() => onCloseModal?.()}
+            onClick={handleCancel}
           >
             Cancel
           </Button>
         )}
-        <Button disabled={isCreating}>
+        <Button type="submit" disabled={isCreating}>
           {isCreating ? "Creating..." : "Create guest"}
         </Button>
       </FormRow>
