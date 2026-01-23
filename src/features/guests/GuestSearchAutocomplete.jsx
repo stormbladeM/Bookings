@@ -3,11 +3,16 @@ import Select from "react-select";
 import styled from "styled-components";
 import Button from "../../ui/Button";
 import { useGuests } from "./useGuests";
-import CreateGuestForm from "./CreateGuestForm"; // Re-trigger HMR
-import Modal from "../../ui/Modal";
+import CreateGuestForm from "./CreateGuestForm";
 import Spinner from "../../ui/Spinner";
 
 const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const SearchContainer = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
@@ -15,6 +20,14 @@ const Container = styled.div`
 
 const SelectWrapper = styled.div`
   flex: 1;
+`;
+
+const FormContainer = styled.div`
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background-color: var(--color-grey-50);
+  border: 1px solid var(--color-grey-200);
+  border-radius: var(--border-radius-md);
 `;
 
 const customStyles = {
@@ -77,6 +90,7 @@ const customStyles = {
 function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
   const { guests, isLoading } = useGuests();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   if (isLoading) return <Spinner />;
 
@@ -128,34 +142,44 @@ function GuestSearchAutocomplete({ selectedGuest, onSelectGuest }) {
       }
     : null;
 
+  const handleGuestCreated = () => {
+    setShowCreateForm(false);
+  };
+
   return (
     <Container>
-      <SelectWrapper>
-        <Select
-          options={guestOptions}
-          value={selectedOption}
-          onChange={handleChange}
-          onInputChange={(value) => setSearchTerm(value)}
-          filterOption={filterOption}
-          formatOptionLabel={formatOptionLabel}
-          styles={customStyles}
-          placeholder="Search guests by name, email, or nationality..."
-          isClearable
-          isSearchable
-          noOptionsMessage={() => "No guests found"}
-        />
-      </SelectWrapper>
+      <SearchContainer>
+        <SelectWrapper>
+          <Select
+            options={guestOptions}
+            value={selectedOption}
+            onChange={handleChange}
+            onInputChange={(value) => setSearchTerm(value)}
+            filterOption={filterOption}
+            formatOptionLabel={formatOptionLabel}
+            styles={customStyles}
+            placeholder="Search guests by name, email, or nationality..."
+            isClearable
+            isSearchable
+            noOptionsMessage={() => "No guests found"}
+          />
+        </SelectWrapper>
 
-      <Modal>
-        <Modal.open opens="guest-form">
-          <Button variation="secondary" size="small">
-            New Guest
-          </Button>
-        </Modal.open>
-        <Modal.window name="guest-form">
-          <CreateGuestForm />
-        </Modal.window>
-      </Modal>
+        <Button
+          variation="secondary"
+          size="small"
+          type="button"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+        >
+          {showCreateForm ? "Cancel" : "New Guest"}
+        </Button>
+      </SearchContainer>
+
+      {showCreateForm && (
+        <FormContainer>
+          <CreateGuestForm onCloseModal={handleGuestCreated} />
+        </FormContainer>
+      )}
     </Container>
   );
 }
